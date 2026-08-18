@@ -58,6 +58,7 @@ fun App(
         var maxFps by rememberSaveable { mutableStateOf(15) }
         var showSettings by rememberSaveable { mutableStateOf(false) }
         var showDashOnboarding by rememberSaveable { mutableStateOf(false) }
+        var showDiagnostics by rememberSaveable { mutableStateOf(false) }
         var dashEnabled by remember { mutableStateOf(settingsStore?.dashEnabled() ?: false) }
         var dashResolution by remember { mutableStateOf(settingsStore?.dashResolution() ?: DashResolution.DEFAULT) }
         var showDisclaimer by rememberSaveable { mutableStateOf(true) }
@@ -66,11 +67,17 @@ fun App(
         val uriHandler = LocalUriHandler.current
 
         LaunchedEffect(updateChecker) { update = updateChecker?.newerThan(AppInfo.VERSION) }
-        BackHandler(enabled = showSettings || showDashOnboarding) {
-            if (showDashOnboarding) showDashOnboarding = false else showSettings = false
+        BackHandler(enabled = showSettings || showDashOnboarding || showDiagnostics) {
+            when {
+                showDiagnostics -> showDiagnostics = false
+                showDashOnboarding -> showDashOnboarding = false
+                else -> showSettings = false
+            }
         }
 
-        if (showDashOnboarding && dashSetup != null) {
+        if (showDiagnostics) {
+            DiagnosticsScreen(onBack = { showDiagnostics = false })
+        } else if (showDashOnboarding && dashSetup != null) {
             DashOnboarding(
                 dash = dashSetup,
                 onOptOut = {
@@ -100,6 +107,7 @@ fun App(
                 onDisableDash = { dashEnabled = false; settingsStore?.setDashEnabled(false) },
                 bikeName = profile.displayName,
                 onChangeBike = { showSettings = false; changingBike = true; selectedBikeId = null },
+                onOpenDiagnostics = { showDiagnostics = true },
                 update = update,
                 onBack = { showSettings = false },
             )

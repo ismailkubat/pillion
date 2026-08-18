@@ -47,9 +47,10 @@ class MirrorEngine(
                 channel.open()
                 val reader = FrameReader(channel)
                 Logger.d("session: handshake")
-                Handshake(channel, reader).perform()
+                val handshake = Handshake(channel, reader)
+                handshake.perform()
                 Logger.d("session: streaming")
-                streamLoop(reader)
+                streamLoop(reader, handshake)
             } catch (t: Throwable) {
                 Logger.e("session failed", t)
                 if (running) _state.value = MirrorState.Error(t.message ?: "connection lost")
@@ -68,7 +69,7 @@ class MirrorEngine(
         _state.value = MirrorState.Idle
     }
 
-    private suspend fun streamLoop(reader: FrameReader) {
+    private suspend fun streamLoop(reader: FrameReader, handshake: Handshake) {
         // Stop-and-wait: send the freshest frame, then block on its IMAGE_ACK before sending the
         // next, so exactly one frame is ever on the link. A sliding window (sending N+1 before N's
         // ACK returns) buffered a frame ahead and added a whole round-trip of latency on slower
@@ -99,8 +100,23 @@ class MirrorEngine(
             lastFrameKb = jpeg.size / 1024
             if (seq == 2) Logger.d("session: first image sent (${jpeg.size} bytes)")
             // Wait for this frame's ACK before capturing/sending the next one. channel.close() on
-            // stop() unblocks the reader, so this can't hang a teardown.
-            while (running && reader.next().serviceType != ServiceType.IMAGE_ACK) { /* skip non-ACKs */ }
+            // stop() unblocks the reader, so this can't hang a teardown. Anything else the dash sends
+            // meanwhile (e.g. a "go home" tap) is logged for diagnostics — Pillion doesn't act on it,
+            // but seeing it is the whole point of Settings -> Diagnostics when a bike misbehaves.
+            while (running) {
+                val f = reader.next()
+                if (f.serviceType == ServiceType.IMAGE_ACK) break
+                Logger.d(
+                    "session: dash sent ${ServiceType.nameFor(f.serviceType)} " +
+                        "(${f.payload.size}B: ${f.payload.take(16).joinToString(" ") { hex(it) }})",
+                )
+                if (f.serviceType == ServiceType.APP_START_CONTENT_UPDATE_REQUEST) {
+                    // The dash re-asks for the nav-status/GPS/zoom burst before it keeps showing image
+                    // content; skipping this makes it silently give up a few seconds later.
+                    Logger.d("session: dash asked for content — resending setup burst")
+                    handshake.sendContentBurst()
+                }
+            }
             if (!running) break
             val ackMs = nowMs() - sentAt
             ackMsTotal += ackMs
@@ -129,3 +145,6 @@ class MirrorEngine(
         channel.write(NaviLiteCodec.build(FRAME_TYPE_PHONE, ServiceType.IMAGE, PDT_POINTER, payload))
     }
 }
+
+/** Multiplatform-safe byte->hex (kotlin.text.format(vararg) is JVM-only; commonMain runs on iOS too). */
+private fun hex(b: Byte): String = (b.toInt() and 0xff).toString(16).padStart(2, '0')

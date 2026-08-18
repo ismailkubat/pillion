@@ -77,6 +77,7 @@ internal fun SettingsScreen(
     onDisableDash: () -> Unit = {},
     bikeName: String = "",
     onChangeBike: () -> Unit = {},
+    onOpenDiagnostics: () -> Unit = {},
     update: UpdateInfo?,
     onBack: () -> Unit,
 ) {
@@ -244,6 +245,8 @@ internal fun SettingsScreen(
         SettingsGroup {
             AppRow()
             GroupDivider()
+            LinkRow("Diagnostics") { onOpenDiagnostics() }
+            GroupDivider()
             LinkRow("Source code") { uriHandler.openUri(REPO_URL) }
             GroupDivider()
             LinkRow("Report an issue") { uriHandler.openUri("$REPO_URL/issues") }
@@ -345,7 +348,7 @@ private fun DashResolutionSelector(
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text(
                         "Controls how much of the map fits on the dash. The dash always receives a " +
-                            "480 × 240 image — a larger layout just shows more at once.",
+                            "480 × 234 image — a larger layout just shows more at once.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),

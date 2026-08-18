@@ -179,7 +179,7 @@ class AdbBootstrapActivity : ComponentActivity() {
                                 // frames after Wi-Fi drops on the bike.
                                 val cmd = "CLASSPATH=\$(pm path app.pillion | grep base.apk | cut -d: -f2) " +
                                     "nohup app_process / app.pillion.server.DashServer " +
-                                    "960 480 160 40 480 240 $component >/dev/null 2>&1 &"
+                                    "960 480 160 40 480 234 $component >/dev/null 2>&1 &"
                                 val stream = PillionAdb.getInstance(applicationContext).openExecStream(cmd)
                                 stream.openInputStream().readBytes() // returns once backgrounded
                                 stream.close()

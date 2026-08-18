@@ -76,9 +76,9 @@ object DashServer {
     private const val MIN_INTERVAL_MS = 50L // cap capture/encode to ~20fps; the app paces sends
 
     private var virtualWidth = 480
-    private var virtualHeight = 240
+    private var virtualHeight = 234
     private var outputWidth = 480
-    private var outputHeight = 240
+    private var outputHeight = 234
     private var quality = 40
     private var lastEncodeMs = 0L
     private var encodeWindowStartMs = 0L
@@ -105,12 +105,12 @@ object DashServer {
         if (Looper.myLooper() == null) Looper.prepareMainLooper()
 
         virtualWidth = args.getOrNull(0)?.toIntOrNull() ?: 480
-        virtualHeight = args.getOrNull(1)?.toIntOrNull() ?: 240
+        virtualHeight = args.getOrNull(1)?.toIntOrNull() ?: 234
         val dpi = args.getOrNull(2)?.toIntOrNull() ?: 160
         quality = args.getOrNull(3)?.toIntOrNull() ?: 40
         val outputArg = args.getOrNull(4)?.toIntOrNull()
         outputWidth = outputArg ?: 480
-        outputHeight = args.getOrNull(5)?.toIntOrNull()?.takeIf { outputArg != null } ?: 240
+        outputHeight = args.getOrNull(5)?.toIntOrNull()?.takeIf { outputArg != null } ?: 234
         val launchComponent = args.getOrNull(if (outputArg == null) 4 else 6)
         // launchComponent example: com.waze/com.waze.FreeMapAppActivity
 

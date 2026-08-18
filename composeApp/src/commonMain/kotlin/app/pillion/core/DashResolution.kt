@@ -2,13 +2,14 @@ package app.pillion.core
 
 /**
  * Off-screen display size used by the dedicated dash helper. Frames are still scaled to the
- * Yamaha dash's native 480x240 before they are sent over NaviLite.
+ * Yamaha dash's native 480x234 before they are sent over NaviLite (matches the real Garmin
+ * StreetCross `linkcard_map_image_height` dimen for MODEL_IXWW22 dashes, e.g. XMAX — not 240).
  */
 enum class DashResolution(
     val width: Int,
     val height: Int,
 ) {
-    Native(480, 240),
+    Native(480, 234),
     R640(640, 320),
     R720(720, 360),
     R800(800, 400),

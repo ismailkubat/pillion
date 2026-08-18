@@ -41,7 +41,8 @@ local laws about screens/displays while riding.
 
 ## What it does
 
-- Mirrors your **Android** phone screen to the bike's TFT at ~480×240, ~5–15 fps (tunable).
+- Mirrors your **Android** phone screen to the bike's TFT at ~480×234 (model-dependent — 480×240
+  on some dashes), ~5–15 fps (tunable).
 - Works with **any** app on your phone (Waze, Google Maps, Organic Maps, music, etc.) — it casts the
   screen, so it isn't tied to a specific nav app.
 - Connects directly over Bluetooth; **no internet required** while riding.

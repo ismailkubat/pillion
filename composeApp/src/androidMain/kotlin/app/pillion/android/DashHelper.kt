@@ -18,7 +18,10 @@ object DashHelper {
     private const val TAG = "Pillion"
     private const val DPI = 160
     private const val DASH_PROTOCOL_WIDTH = 480
-    private const val DASH_PROTOCOL_HEIGHT = 240
+    // Not 240: the real Garmin StreetCross `linkcard_map_image_height` dimen for MODEL_IXWW22
+    // dashes (e.g. XMAX) is 234. Sending 240 lets the dash ACK every frame but apparently fails to
+    // decode/display it, surfacing minutes later as "waiting" -> "Connection Failed" on the dash.
+    private const val DASH_PROTOCOL_HEIGHT = 234
     private const val CONNECT_TIMEOUT_MS = 250
     private const val START_TIMEOUT_MS = 5_000L
     private const val WATCHDOG_INTERVAL_MS = 3_000L

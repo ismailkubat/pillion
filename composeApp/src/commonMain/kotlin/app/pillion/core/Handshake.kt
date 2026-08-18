@@ -24,8 +24,18 @@ class Handshake(
         val secData = awaitService(ServiceType.SEC_DATA)
         Logger.d("handshake: SEC_DATA part=${Auth.partNumber(secData.payload)}")
         send(ServiceType.SEC_DATA_ACK, PDT_POINTER, Auth.secDataAckPayload(secData.payload))
-        for ((svc, pdt, payload) in SETUP_BURST) send(svc, pdt, payload)
+        sendContentBurst()
         Logger.d("handshake: setup burst sent, authenticated")
+    }
+
+    /**
+     * Re-sends the nav-status/GPS/zoom/etc burst. Per docs/PROTOCOL.md, the dash's
+     * APP_START_CONTENT_UPDATE_REQUEST (service 55, NAVI_IMAGE) expects this as the "phone action" —
+     * without it the dash gives up on the image content after a few seconds (observed: ~5s) and the
+     * screen never switches away from its menu, even though IMAGE_FRAME_UPDATE keeps getting ACKed.
+     */
+    fun sendContentBurst() {
+        for ((svc, pdt, payload) in SETUP_BURST) send(svc, pdt, payload)
     }
 
     private fun awaitService(serviceType: Int): NaviFrameView {

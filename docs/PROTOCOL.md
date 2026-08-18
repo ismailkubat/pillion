@@ -291,13 +291,21 @@ Send each frame as **`IMAGE_FRAME_UPDATE` (service 0, `POINTER`)**:
  offset  size  field
    0      1    imageType   observed 3 = expanded navigation view
    1      2    sequence    uint16, little-endian, increments per frame
-   3    var    jpeg        baseline JPEG, 480 × 240 or 480 × 236
+   3    var    jpeg        baseline JPEG, model-dependent resolution (see below)
 ```
 
 The dash decodes the JPEG and replies **`IMAGE_ACK` (80)**. The sender waits for the ack (skipping any
 other frames that arrive) before sending the next image, which naturally paces throughput.
 
-- **Resolution:** 480 × 240 or 480 × 236.
+- **Resolution is model-dependent and must match exactly** — confirmed from the real StreetCross APK's
+  `res/values/dimens.xml` (decompiled with jadx): `linkcard_map_image_{width,height}` = **480 × 234**
+  for `MODEL_IXWW22` (e.g. XMAX), `imww23_map_image_{width,height}` = **480 × 240** for `MODEL_IMWW23`.
+  Sending the wrong height (e.g. 240 to an IXWW22 dash) does **not** get rejected at the transport level
+  — the dash keeps ACKing every frame — but it silently fails to decode/display the content, and after
+  ~5s of `APP_START_CONTENT_UPDATE_REQUEST` with no valid content the dash gives up: shows "waiting" →
+  "Connection Failed" → sends `APP_STOP_CONTENT_UPDATE_REQUEST`. This is the single most important
+  number to get right per model; when in doubt, decompile the current StreetCross APK and check
+  `dimens.xml` rather than guessing.
 - **Throughput:** roughly **14–15 fps** at JPEG quality ≈ 40 on a fast phone over Bluetooth; higher
   quality → larger frames → fewer fps. The frame rate emerges from encode + Bluetooth throughput; it
   is not commanded.
@@ -312,7 +320,7 @@ dash → AUTH_REQUEST_SEC_DATA(83)        # ("partnumber"+nonce) XOR 0x0A
 phone → AUTH_REQUEST_SEC_DATA_ACK(84)   # nonce XOR 0x0A
 phone → setup burst (nav status, day/night, gps, zoom, ...)
 loop:
-  phone → IMAGE_FRAME_UPDATE(0)         # imageType + seq + JPEG(480x240 or 480×236)
+  phone → IMAGE_FRAME_UPDATE(0)         # imageType + seq + JPEG(480×234 for IXWW22, 480×240 for IMWW23)
   dash  → IMAGE_ACK(80)
 ```
 

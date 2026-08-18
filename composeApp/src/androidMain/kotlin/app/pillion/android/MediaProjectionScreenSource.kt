@@ -15,8 +15,14 @@ import app.pillion.core.ScreenSource
 import java.io.ByteArrayOutputStream
 
 /**
- * A [ScreenSource] backed by MediaProjection. Mirrors the display into a 480x240 [ImageReader]
+ * A [ScreenSource] backed by MediaProjection. Mirrors the display into a 480x234 [ImageReader]
  * and, on demand, compresses the most recent frame to JPEG. Single responsibility: screen -> JPEG.
+ *
+ * 480x234 (not x240) matches the real Garmin StreetCross `linkcard_map_image_height` dimen for
+ * MODEL_IXWW22 dashes (e.g. XMAX): sending 6px too tall lets the dash ACK every frame (it never
+ * rejects the transport-level packet) while apparently still failing to decode/display it, which
+ * silently manifests as the dash showing "waiting" then "Connection Failed" ~5s after
+ * APP_START_CONTENT_UPDATE_REQUEST, even though the phone-side fps counter looks healthy.
  */
 class MediaProjectionScreenSource(
     private val context: Context,
@@ -89,7 +95,7 @@ class MediaProjectionScreenSource(
 
     private companion object {
         const val WIDTH = 480
-        const val HEIGHT = 240
+        const val HEIGHT = 234
         const val DEFAULT_QUALITY = 40
         const val TAG = "Pillion"
     }

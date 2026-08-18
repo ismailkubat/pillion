@@ -112,7 +112,7 @@ class SampleHandler: RPBroadcastSampleHandler {
         // Adaptive quality: a busy map at the user's quality (16-18 KB/frame) can cost 400-900ms
         // per frame on a choked link. Steer quality by measured ACK time, never above the setting.
         var q = jpegQuality
-        // Second knob past the quality floor: soften the image (Lanczos down/up, still 480×240 on
+        // Second knob past the quality floor: soften the image (Lanczos down/up, still 480×234 on
         // the wire) so busy-map frames drop to ~4-6KB — the only way to hold 10+fps on this link.
         var detail: CGFloat = 1.0
         var lastSentPB: CVPixelBuffer?
@@ -186,25 +186,29 @@ class SampleHandler: RPBroadcastSampleHandler {
         lock.lock(); latestPixels = pb; latestOrient = fix; lock.unlock()
     }
 
-    /// Downscale + letterbox to the 480×240 panel and JPEG-encode. Runs on the sender thread once per
+    /// Downscale + letterbox to the 480×234 panel and JPEG-encode. Runs on the sender thread once per
     /// sent frame. Broadcast extensions are killed past ~50 MB, so each encode gets its own pool.
+    ///
+    /// 234, not 240: the real Garmin StreetCross `linkcard_map_image_height` dimen for
+    /// MODEL_IXWW22 dashes (e.g. XMAX) is 234px. 6px too tall lets the dash ACK every frame while
+    /// apparently still failing to decode/display it (see Android MediaProjectionScreenSource).
     private func encode(_ pb: CVPixelBuffer, _ orient: CGImagePropertyOrientation,
                         quality: Double, detail: CGFloat = 1.0) -> [UInt8]? {
         autoreleasepool {
             let img = CIImage(cvPixelBuffer: pb).oriented(orient)
             let e = img.extent
-            // Aspect-FIT (letterbox): whole screen centred on the 480×240 panel with black bars.
-            let scale = min(480.0 / e.width, 240.0 / e.height)
+            // Aspect-FIT (letterbox): whole screen centred on the 480×234 panel with black bars.
+            let scale = min(480.0 / e.width, 234.0 / e.height)
             let s = img.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
             let se = s.extent
             let tx = (480 - se.width) / 2 - se.origin.x
-            let ty = (240 - se.height) / 2 - se.origin.y
+            let ty = (234 - se.height) / 2 - se.origin.y
             let centered = s.transformed(by: CGAffineTransform(translationX: tx, y: ty))
-            let canvas = CGRect(x: 0, y: 0, width: 480, height: 240)
+            let canvas = CGRect(x: 0, y: 0, width: 480, height: 234)
             var cropped = centered.composited(over: CIImage(color: .black).cropped(to: canvas)).cropped(to: canvas)
             if detail < 1.0 {
-                // Soften via Lanczos down + up on the final 480×240: kills the high-frequency map
-                // detail that dominates JPEG size (~detail² smaller frames). Wire stays 480×240.
+                // Soften via Lanczos down + up on the final 480×234: kills the high-frequency map
+                // detail that dominates JPEG size (~detail² smaller frames). Wire stays 480×234.
                 cropped = cropped
                     .applyingFilter("CILanczosScaleTransform",
                                     parameters: [kCIInputScaleKey: detail, kCIInputAspectRatioKey: 1.0])
