@@ -25,8 +25,12 @@ targets:
     entitlements:
       path: iosApp/iosApp.entitlements
       properties:
+        # App Group IDs are globally unique across all Apple dev accounts (like bundle IDs) —
+        # "group.app.pillion" is already claimed under the upstream maintainer's team, so a fork
+        # built under a different personal/free team must use its own ID here (and the matching one
+        # in PillionBroadcast's entitlements + Shared/Transport.swift's `appGroup` constant below).
         com.apple.security.application-groups:
-          - group.app.pillion
+          - group.app.pillion.ismailkubat
     dependencies:
       - target: PillionBroadcast
         embed: true
@@ -109,7 +113,7 @@ targets:
       path: Extension/PillionBroadcast.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.app.pillion
+          - group.app.pillion.ismailkubat
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.pillion.dev.broadcast

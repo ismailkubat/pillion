@@ -26,7 +26,8 @@ enum BroadcastConfig {
 
     /// App Group shared with the container app so the extension can read the user's live Settings
     /// (the extension is a separate process and can't see the app's own UserDefaults).
-    static let appGroup = "group.app.pillion"
+    // Must match the App Group ID configured in iosApp/project.yml for both targets.
+    static let appGroup = "group.app.pillion.ismailkubat"
     private static var shared: UserDefaults? { UserDefaults(suiteName: appGroup) }
 
     // Each reader falls back to a safe default if the group is unavailable (e.g. a re-signer that
