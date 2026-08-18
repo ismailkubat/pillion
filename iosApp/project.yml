@@ -38,7 +38,9 @@ targets:
         product: SmartDeviceLink
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.pillion.dev
+        # Bundle IDs are globally unique too — "app.pillion.dev" is already registered under someone
+        # else's team, so a fork needs its own (must match Signing.xcconfig if that also sets it).
+        PRODUCT_BUNDLE_IDENTIFIER: app.pillion.ismailkubat
         INFOPLIST_FILE: iosApp/Info.plist
         # Gradle's build phase writes outside DerivedData, so the sandbox must be off (Xcode 15+).
         ENABLE_USER_SCRIPT_SANDBOXING: NO
@@ -116,5 +118,5 @@ targets:
           - group.app.pillion.ismailkubat
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.pillion.dev.broadcast
+        PRODUCT_BUNDLE_IDENTIFIER: app.pillion.ismailkubat.broadcast
         INFOPLIST_FILE: Extension/Info.plist
